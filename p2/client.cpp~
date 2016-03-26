@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 		printf("<You> : %s",message);
             }
             first_message=1; 
-            send(MasterSocket,message,1024,0);
+            send(MasterSocket,message,248,0);
             fflush(stdout);   
 	}
     }
