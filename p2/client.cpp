@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <string.h>
 #define PORT 1489
+#define hyu 1
 int set_nonblock(int fd)
 {
 	int flags;

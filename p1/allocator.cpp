@@ -1,5 +1,4 @@
 #include "allocator.h"
-#include <iostream>
 Allocator::Allocator(void *base, size_t size)
 {
 for (int i=0;i<max_ptrs;i++){

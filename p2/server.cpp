@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	return 1;
     }
     std::cout<<"Bind is created"<<std::endl;
-	//set_nonblock(listen_sock);
+    set_nonblock(listen_sock);
     int members=1;
     Result = listen(listen_sock, SOMAXCONN);	
     if(Result == -1)
