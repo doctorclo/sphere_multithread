@@ -7,8 +7,8 @@
 #include <algorithm>    
 #include <vector>
 #include <set>
-#define MAX_MEM 300
-#define MAX_N 500
+#define MAX_MEM 10000000
+#define MAX_N 5000
 void write_to_file(std::map <int64_t,std::list<int64_t>> &rev_index,std::string file_name,int *pos);
 void read_from_file(std::string file_name);
 void create_index(std::list <std::string> file_names);
@@ -17,7 +17,7 @@ std::set<int64_t> all_words;
 int main(int argc, char **argv)
 {
     std::cout<<"Now writing forward index from file"<<std::endl;
-    std::ifstream bytefile("test"); 
+    std::ifstream bytefile("test_large"); 
     std::map <int64_t,std::list<int64_t>> rev_index;
     std::list <int> positions;
     std::list <std::string> names;
@@ -29,20 +29,21 @@ int main(int argc, char **argv)
     int pos1=0;
     int N=0;
     int *pos=&pos1;   
-    while (bytefile.readsome(buff1, 8) != 0)
+    int num_docs=0;
+    while (bytefile.read(buff1, 8) != 0)
     {
-        bytefile.readsome(buff2, 4);
+        num_docs+=1;
+        bytefile.read(buff2, 4);
         size+=8;
         //size+=4;
         int64_t *d_id = reinterpret_cast<int64_t*>(buff1);
         int32_t *n = reinterpret_cast<int32_t*>(buff2);
 	    int64_t doc_id=*d_id;
-        std::cout << *d_id << ' ' << *n << std::endl;
-
+        //std::cout << *d_id << ' ' << *n << std::endl;
         for (int32_t i = 0; i < *n; i++)
         {
             size+=8;
-            bytefile.readsome(buff1, 8);
+            bytefile.read(buff1, 8);
             int64_t *w_id = reinterpret_cast<int64_t*>(buff1);
             all_words.insert(*w_id);
             if (rev_index.find(*w_id) == rev_index.end()) {
@@ -54,7 +55,8 @@ int main(int argc, char **argv)
                  rev_index.at(*w_id).push_back(doc_id);
             }
             if (size>=MAX_MEM){
-                std::cout<<"WRITE TO FILE"<<std::endl;
+                std::cout<<"docs READ"<<num_docs<<std::endl;
+               // std::cout<<"WRITE TO FILE"<<std::endl;
                 positions.push_back(*pos);
                 std::string s = std::to_string(N);
                 names.push_back(s);
@@ -63,9 +65,9 @@ int main(int argc, char **argv)
                 N++;
                 rev_index.clear();
             }
-            std::cout << *w_id << ' ';
+       //     std::cout << *w_id << ' ';
         }
-        std::cout << std::endl;
+     //   std::cout << std::endl;
     }
     bytefile.close();
    
@@ -134,8 +136,8 @@ void create_index(std::list <std::string> file_names)
     while (1){
         for (i=0; i<file_names.size(); i++){
             if (need_to_read[i]==1){
-                if (myFiles[i].readsome(buff1, 8)!=0){
-                    myFiles[i].readsome(buff2, 4);
+                if (myFiles[i].read(buff1, 8)!=0){
+                    myFiles[i].read(buff2, 4);
                     int64_t *w_id = reinterpret_cast<int64_t*>(buff1);
                     int32_t *n = reinterpret_cast<int32_t*>(buff2);
                     read_word[i]=*w_id;
@@ -162,7 +164,7 @@ void create_index(std::list <std::string> file_names)
                     need_to_read[i]=1;
                     for (int32_t j = 0; j < docs_len[i]; j++)
                     {
-                        myFiles[i].readsome(buff1, 8);
+                        myFiles[i].read(buff1, 8);
                         int64_t *d_id = reinterpret_cast<int64_t*>(buff1);
                         all_docs.push_back(*d_id);
                     }
@@ -214,15 +216,15 @@ void read_from_file(std::string file_name)
     std::ifstream bytefile1(file_name);
     char *buff1 = new char[8];
     char *buff2 = new char[4];
-    while (bytefile1.readsome(buff1, 8) != 0)
+    while (bytefile1.read(buff1, 8) != 0)
     {
-        bytefile1.readsome(buff2, 4);
+        bytefile1.read(buff2, 4);
         int64_t *d_id = reinterpret_cast<int64_t*>(buff1);
         int32_t *n = reinterpret_cast<int32_t*>(buff2);
         std::cout << *d_id << ' ' << *n << std::endl;
         for (int32_t i = 0; i < *n; i++)
         {
-            bytefile1.readsome(buff1, 8);
+            bytefile1.read(buff1, 8);
             int64_t *w_id = reinterpret_cast<int64_t*>(buff1);
             std::cout << *w_id << ' ';
         }
@@ -242,26 +244,26 @@ void read_final_index()
     char *buff2 = new char[4];
     for (int i=0;i<all_words.size();i++){
         bytefile1.seekg(16*i);
-        bytefile1.readsome(buff1, 8);
+        bytefile1.read(buff1, 8);
         int64_t *w_id = reinterpret_cast<int64_t*>(buff1);
-        bytefile1.readsome(buff11, 8);
+        bytefile1.read(buff11, 8);
         int64_t *offset = reinterpret_cast<int64_t*>(buff11);
         std::cout << *w_id << ' ' << *offset << std::endl;
         bytefile1.seekg(*offset);
-        bytefile1.readsome(buff2, 4);
+        bytefile1.read(buff2, 4);
         int32_t *n = reinterpret_cast<int32_t*>(buff2);
         for (int32_t j = 0; j < *n; j++)
         {
-            bytefile1.readsome(buff1, 8);
+            bytefile1.read(buff1, 8);
             int64_t *d_id = reinterpret_cast<int64_t*>(buff1);
             std::cout << *d_id << ' ';
         }
         std::cout<<std::endl;
     }
     bytefile1.seekg(16*all_words.size());
-    bytefile1.readsome(buff1, 8);
+    bytefile1.read(buff1, 8);
     int64_t *zero1 = reinterpret_cast<int64_t*>(buff1);
-    bytefile1.readsome(buff11, 8);
+    bytefile1.read(buff11, 8);
     int64_t *zero2 = reinterpret_cast<int64_t*>(buff11);
     std::cout<<"This is zero after all word id"<<std::endl;
     std::cout << *zero1 << ' ' << *zero2 << std::endl;
