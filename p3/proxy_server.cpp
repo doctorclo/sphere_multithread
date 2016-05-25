@@ -60,11 +60,9 @@ std::map<std::string,std::list<std::string>> config;
 int port_num;
 void  special_cb (struct bufferevent *event, short events, void *arg)
 {
-	std::cout<<"Error,new connection or  EOF  callback"<<std::endl;
 
   	if ( events & BEV_EVENT_EOF )
   	{
-		std::cout<<"EOF was founded"<<std::endl;
     		struct client   *client = (struct client*) arg; //Try send data
     		struct evbuffer *buf_in  = bufferevent_get_input  (event);
     		struct evbuffer *buf_out;
@@ -95,7 +93,6 @@ void  special_cb (struct bufferevent *event, short events, void *arg)
 
 void  read_cb  (struct bufferevent *event, void *arg)
 {
-  	std::cout<<"It is  read callback"<<std::endl;
   	struct client  *client = (struct client*) arg;
   	struct evbuffer *buf_in  = bufferevent_get_input  (event);
   	struct evbuffer *buf_out;
