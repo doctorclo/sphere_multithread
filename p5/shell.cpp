@@ -20,6 +20,8 @@
 #include <cerrno>
 #include <regex>
 #include <list>
+#include <stdio.h>
+ #include <stdlib.h>
 void handler(int a);
 void execute(std::list<std::string>,std::list<pid_t>);
 void kill_all_processes();
@@ -29,11 +31,14 @@ std::list<pid_t> pids;
 int main()
 {
     signal(SIGINT,handler);
-    std::string cmd;
     std::list<std::string> parse_cmds;
     std::list<pid_t> pids;
-    while (std::getline(std::cin,cmd,'\n')!=0)
+    char buffer[1024];
+    char *line1=buffer;
+    size_t len1;
+    while (getline(&line1,&len1,stdin)!=-1)
     {
+        std::string cmd(line1);
         parse_cmd(parse_cmds,cmd);       
         if ( parse_cmds.back () == "&" )
         {
