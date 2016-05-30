@@ -37,21 +37,13 @@ bool ismanaging(char c)
 int main()
 {
     signal(SIGINT,handler);
+    std::string cmd;
     std::list<std::string> parse_cmds;
     std::list<pid_t> pids;
-    char buffer[1024];
-    char *line1=buffer;
-    size_t len1;
-    while (getline(&line1,&len1,stdin)!=-1)
+    while (std::getline(std::cin,cmd,'\n')!=0)
     {
-	//**cmd = NULL;
-        //parse(line1, cmd,parse_cmds);
-       // std::list<std::string> res;
-  	//bool back = 0;
-
-        //std::cout<<"line 1 "<<cmd2[0]<<std::endl;
-        //std::string cmd(line1);
-        parse_cmd(parse_cmds,line1);  
+	
+        parse_cmd(parse_cmds,cmd);  
 
         if ( parse_cmds.back () == "&" )
         {
