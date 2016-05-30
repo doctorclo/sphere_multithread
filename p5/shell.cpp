@@ -22,12 +22,18 @@
 #include <list>
 #include <stdio.h>
  #include <stdlib.h>
+#include "boost/regex.hpp"
 void handler(int a);
 void execute(std::list<std::string>,std::list<pid_t>);
 void kill_all_processes();
 void parse_cmd (std::list<std::string> &cmds, const std::string &line);
 int run_programm(int *,char **,int ,int );
+void parse(char *input, char **&cmd,std::list<std::string> &res);
 std::list<pid_t> pids;
+bool ismanaging(char c)
+{
+        return c == '>' || c == '<' || c == '|' || c == '&' || c == ';';
+}
 int main()
 {
     signal(SIGINT,handler);
@@ -38,8 +44,15 @@ int main()
     size_t len1;
     while (getline(&line1,&len1,stdin)!=-1)
     {
-        std::string cmd(line1);
-        parse_cmd(parse_cmds,cmd);       
+	//**cmd = NULL;
+        //parse(line1, cmd,parse_cmds);
+       // std::list<std::string> res;
+  	//bool back = 0;
+
+        //std::cout<<"line 1 "<<cmd2[0]<<std::endl;
+        //std::string cmd(line1);
+        parse_cmd(parse_cmds,line1);  
+
         if ( parse_cmds.back () == "&" )
         {
              parse_cmds.pop_back ();
@@ -78,9 +91,78 @@ int main()
     }
     return 0;
 }
-void parse_cmd(std::list<std::string> &cmds,const std::string &cmd)
+void parse(char *input, char **&cmd,std::list<std::string> &res)
 {
-    std::regex  re_cmds ("(&&|&|[|][|]|[|]|<|>|[^|&<>\\s]+)");
+    cmd = (char **) malloc(sizeof(*cmd));
+    cmd[0] = (char *) malloc(sizeof(**cmd));
+
+    int cap = 1, pos = 0, posi = 0, n = int(strlen(input)), currcap = 1, qopen = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (input[i] == '\'') {
+            qopen ^= 1;
+            continue;
+        }
+
+        if (!qopen && posi > 0 && (isspace(input[i]) || (ismanaging(input[i]) ^ ismanaging(input[i - 1])))) {
+            pos++;
+            posi = 0;
+        }
+        
+        if (pos + 1 == cap) {
+            cmd = (char **) realloc(cmd, sizeof(*cmd) * cap * 2);
+
+            for (int j = cap; j < cap * 2; j++) {
+                cmd[j] = NULL;
+            }
+            cap *= 2;
+        }
+
+        if (cmd[pos] == NULL) {
+            cmd[pos] = (char *) malloc(sizeof(**cmd));
+            cmd[pos][posi] = 0;
+            currcap = 1;
+        }
+
+        if (posi + 1 == currcap) {
+            cmd[pos] = (char *) realloc(cmd[pos], sizeof(**cmd) * currcap * 2);
+
+            for (int j = currcap; j < currcap * 2; j++) {
+                cmd[pos][j] = 0;
+            }
+            currcap *= 2;
+        }
+        
+        if (qopen || !isspace(input[i])) {
+            cmd[pos][posi] = input[i];
+            posi++;
+        }
+    }
+
+    if (posi == 0) {
+        free(cmd[pos]);
+        cmd[pos] = NULL;
+    }
+    res.clear();
+    for (int i=0;i<pos;i++)
+    {
+        std::cout<<cmd[i]<<std::endl;
+        res.push_back(std::string(cmd[i]));
+    }
+}
+
+void parse_cmd(std::list<std::string> &cmds,const std::string &_s)
+{
+    std::string command;
+    std::string str=_s;
+    boost::regex rx("(&&|&|[|][|]|[|]|<|>|[^|&<>\\s]+)");
+    boost::smatch res;
+    while (boost::regex_search (str,res,rx))
+    {
+	cmds.push_back (res[0]);
+        str = res.suffix().str();
+    }
+    /*   std::regex  re_cmds ("(&&|&|[|][|]|[|]|<|>|[^|&<>\\s]+)");
     std::regex  re_spcs ("\\s+");
     std::string cmds_parsed = std::regex_replace (cmd, re_spcs, " ");
     std::regex_iterator<std::string::iterator> re_end, re_it (cmds_parsed.begin (), cmds_parsed.end (), re_cmds);
@@ -90,6 +172,11 @@ void parse_cmd(std::list<std::string> &cmds,const std::string &cmd)
         cmds.push_back (s);
         ++re_it;
     }
+   // for (std::list<std::string>::iterator it=cmds.begin(); it != cmds.end(); ++it)
+     //      std::cout <<"<<<" << *it;
+
+      //std::cout << '\n';
+    return ;*/
     return ;
 }
 void execute(std::list<std::string> cmds,std::list<pid_t> pids)
