@@ -40,7 +40,8 @@ int main()
     std::string cmd;
     std::list<std::string> parse_cmds;
     std::list<pid_t> pids;
-    while (std::getline(std::cin,cmd,'\n')!=0)
+    std::getline(std::cin,cmd,'\n');
+    while (!std::cin.eof())
     {
 	
         parse_cmd(parse_cmds,cmd);  
@@ -80,6 +81,7 @@ int main()
                 std::cerr << "Process " << pid << " exited: "<< ret << std::endl;
             } 
         }
+    std::getline(std::cin,cmd,'\n');
     }
     return 0;
 }
